@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Smart Product Caching & Layered Architecture Workshop</title>
+  <meta name="description" content="Interactive demo and verification tool for Express layered architecture with caching middleware, 1-minute TTL, and invalidation.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="app.css">
+</head>
+<body>
+  <div class="app-background">
+    <div class="glow-orb orb-1"></div>
+    <div class="glow-orb orb-2"></div>
+    <div class="glow-orb orb-3"></div>
+  </div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="header-section">
+      <div class="header-badge">
+        <span class="badge-dot"></span>
+        <span>Express Layered Architecture + Caching Workshop</span>
+      </div>
+      <h1 class="main-title">
+        Smart Product <span class="gradient-text">Cache Explorer</span>
+      </h1>
+      <p class="subtitle">
+        Visual testing bench for <code>Route → Middleware → Controller → Service → Database</code> request pipeline with 1-minute TTL caching & smart cache invalidation.
+      </p>
+    </header>
+
+    <!-- Architecture Visualizer Bar -->
+    <section class="architecture-flow-card" aria-label="Layered Architecture Request Flow">
+      <div class="flow-header">
+        <span class="flow-label">LAYERED PIPELINE FLOW</span>
+        <span class="flow-indicator" id="flow-indicator">Ready</span>
+      </div>
+      <div class="pipeline-track" id="pipeline-track">
+        <div class="pipeline-node" id="node-route">
+          <div class="node-icon">🛣️</div>
+          <div class="node-meta">
+            <span class="node-title">Route</span>
+            <span class="node-desc">/products</span>
+          </div>
+        </div>
+        <div class="pipeline-arrow" id="arrow-1">➔</div>
+        <div class="pipeline-node" id="node-middleware">
+          <div class="node-icon">⚡</div>
+          <div class="node-meta">
+            <span class="node-title">Middleware</span>
+            <span class="node-desc" id="middleware-status-text">Cache Check (TTL 60s)</span>
+          </div>
+        </div>
+        <div class="pipeline-arrow" id="arrow-2">➔</div>
+        <div class="pipeline-node" id="node-controller">
+          <div class="node-icon">🎮</div>
+          <div class="node-meta">
+            <span class="node-title">Controller</span>
+            <span class="node-desc">HTTP & Validation</span>
+          </div>
+        </div>
+        <div class="pipeline-arrow" id="arrow-3">➔</div>
+        <div class="pipeline-node" id="node-service">
+          <div class="node-icon">🧠</div>
+          <div class="node-meta">
+            <span class="node-title">Service</span>
+            <span class="node-desc">Business Logic</span>
+          </div>
+        </div>
+        <div class="pipeline-arrow" id="arrow-4">➔</div>
+        <div class="pipeline-node" id="node-database">
+          <div class="node-icon">🗄️</div>
+          <div class="node-meta">
+            <span class="node-title">Database</span>
+            <span class="node-desc">Data Store</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Main Grid -->
+    <main class="dashboard-grid">
+      <!-- Left Column: Controls & Actions -->
+      <section class="card controls-panel" aria-label="API Actions">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Endpoint Actions</h2>
+            <p class="card-subtitle">Test GET caching, TTL, and cache-invalidating mutations</p>
+          </div>
+        </div>
+
+        <div class="action-buttons-group">
+          <div class="action-row">
+            <button id="btn-get-all" class="btn btn-primary" type="button">
+              <span class="method-tag method-get">GET</span>
+              <span class="btn-text">Fetch All Products (<code>/products</code>)</span>
+            </button>
+          </div>
+
+          <div class="action-row input-row">
+            <button id="btn-get-one" class="btn btn-secondary" type="button">
+              <span class="method-tag method-get">GET</span>
+              <span class="btn-text">Get Product By ID</span>
+            </button>
+            <input type="number" id="input-product-id" class="text-input id-input" value="1" min="1" max="100" placeholder="ID">
+          </div>
+
+          <div class="divider"><span>MUTATION OPERATIONS (Invalidates Cache)</span></div>
+
+          <div class="action-row">
+            <button id="btn-create-product" class="btn btn-success" type="button">
+              <span class="method-tag method-post">POST</span>
+              <span class="btn-text">Create Random Product</span>
+            </button>
+          </div>
+
+          <div class="action-row input-row">
+            <button id="btn-update-product" class="btn btn-warning" type="button">
+              <span class="method-tag method-put">PUT</span>
+              <span class="btn-text">Update Product</span>
+            </button>
+            <input type="number" id="input-update-id" class="text-input id-input" value="1" min="1" placeholder="ID">
+          </div>
+
+          <div class="action-row input-row">
+            <button id="btn-patch-product" class="btn btn-info" type="button">
+              <span class="method-tag method-patch">PATCH</span>
+              <span class="btn-text">Patch Price (+ $10)</span>
+            </button>
+            <input type="number" id="input-patch-id" class="text-input id-input" value="2" min="1" placeholder="ID">
+          </div>
+
+          <div class="action-row input-row">
+            <button id="btn-delete-product" class="btn btn-danger" type="button">
+              <span class="method-tag method-delete">DELETE</span>
+              <span class="btn-text">Delete Product</span>
+            </button>
+            <input type="number" id="input-delete-id" class="text-input id-input" value="5" min="1" placeholder="ID">
+          </div>
+        </div>
+
+        <!-- Cache Status Card inside Controls -->
+        <div class="cache-status-box">
+          <div class="status-box-header">
+            <span class="status-label">Active Cache State</span>
+            <button id="btn-refresh-cache-stats" class="btn-icon" title="Refresh Cache Stats" type="button">↻</button>
+          </div>
+          <div class="status-metrics">
+            <div class="metric-item">
+              <span class="metric-num" id="stat-hits">0</span>
+              <span class="metric-text">Hits</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-num" id="stat-misses">0</span>
+              <span class="metric-text">Misses</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-num" id="stat-size">0</span>
+              <span class="metric-text">Cached Keys</span>
+            </div>
+            <div class="metric-item">
+              <span class="metric-num" id="stat-invalidations">0</span>
+              <span class="metric-text">Invalidations</span>
+            </div>
+          </div>
+          <div class="cached-keys-list" id="cached-keys-list">
+            <span class="keys-empty">No active cached keys</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Right Column: Response Inspector & Live Headers -->
+      <section class="card inspector-panel" aria-label="Response Inspector">
+        <div class="card-header">
+          <div class="card-title-group">
+            <h2 class="card-title">Response & Cache Inspector</h2>
+            <p class="card-subtitle">Examine HTTP headers, TTL status, and payload</p>
+          </div>
+          <div id="cache-badge" class="cache-badge badge-idle">Awaiting Request</div>
+        </div>
+
+        <!-- Headers Strip -->
+        <div class="headers-strip">
+          <div class="header-pill">
+            <span class="pill-label">Status:</span>
+            <span class="pill-value" id="header-status">-</span>
+          </div>
+          <div class="header-pill">
+            <span class="pill-label">X-Cache:</span>
+            <span class="pill-value font-bold" id="header-xcache">-</span>
+          </div>
+          <div class="header-pill">
+            <span class="pill-label">Response Time:</span>
+            <span class="pill-value" id="header-time">-</span>
+          </div>
+          <div class="header-pill">
+            <span class="pill-label">Created At:</span>
+            <span class="pill-value" id="header-created">-</span>
+          </div>
+          <div class="header-pill">
+            <span class="pill-label">TTL Remaining:</span>
+            <span class="pill-value" id="header-ttl-countdown">-</span>
+          </div>
+        </div>
+
+        <!-- Response Body Console -->
+        <div class="response-console">
+          <div class="console-top-bar">
+            <span class="console-title">JSON Response Body</span>
+            <span class="console-url" id="console-requested-url">GET /products</span>
+          </div>
+          <pre class="json-display" id="response-json-display"><code>// Click any action on the left to fire a request and test caching behavior.</code></pre>
+        </div>
+
+        <!-- Activity Timeline / Log -->
+        <div class="activity-log-card">
+          <div class="activity-header">
+            <span class="activity-title">Live Request Activity Log</span>
+            <button id="btn-clear-logs" class="btn-link" type="button">Clear</button>
+          </div>
+          <ul class="activity-list" id="activity-log-list">
+            <li class="activity-item info">
+              <span class="log-time">System</span>
+              <span class="log-msg">Workshop test environment ready. Layered structure active.</span>
+            </li>
+          </ul>
+        </div>
+      </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <p>Express Product Caching Workshop • Route → Middleware → Controller → Service → Database</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
